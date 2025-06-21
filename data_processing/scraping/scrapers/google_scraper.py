@@ -31,11 +31,11 @@ class GoogleImageScraper:
 
                 await page.goto(search_url, wait_until="networkidle", timeout=60000)
 
-                for _ in range(5):
+                for _ in range(3):
                     await page.evaluate(
                         "window.scrollTo(0, document.body.scrollHeight)"
                     )
-                    await asyncio.sleep(1.5)
+                    await asyncio.sleep(2.5)
 
                     img_elements = await page.query_selector_all(self.image_selector)
                     for img in img_elements:
