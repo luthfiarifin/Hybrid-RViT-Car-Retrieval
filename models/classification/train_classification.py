@@ -31,6 +31,7 @@ class CarClassifierTrainer:
         result_path="carvit_model.pth",
         use_weighted_loss=True,
         use_class_balancing=False,
+        num_workers=0
     ):
         self.DEVICE = device or ("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.DEVICE}")
@@ -47,6 +48,7 @@ class CarClassifierTrainer:
         self.RESULT_PATH = result_path
         self.USE_WEIGHTED_LOSS = use_weighted_loss
         self.USE_CLASS_BALANCING = use_class_balancing
+        self.NUM_WORKERS = num_workers
 
         # Initialize tracking variables
         self.train_losses = []
@@ -106,7 +108,10 @@ class CarClassifierTrainer:
             )
 
             self.train_loader = DataLoader(
-                dataset=self.train_dataset, batch_size=self.BATCH_SIZE, sampler=sampler
+                dataset=self.train_dataset,
+                batch_size=self.BATCH_SIZE,
+                sampler=sampler,
+                num_workers=self.NUM_WORKERS,
             )
             print("Using WeightedRandomSampler for class balancing")
         else:
