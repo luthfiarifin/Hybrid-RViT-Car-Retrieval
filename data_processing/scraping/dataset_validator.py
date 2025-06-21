@@ -24,11 +24,9 @@ class DatasetValidator:
         min_resolution=(150, 150),
         max_workers=8,
         master_csv_path="master_scrape_log.csv",
-        validated_csv_path="validated_car_listings.csv",
         rejected_dir="rejected_images",
     ):
         self.master_log_path = master_csv_path
-        self.validated_csv_path = validated_csv_path
         self.rejected_path = rejected_dir
 
         self.min_width, self.min_height = min_resolution
@@ -134,7 +132,6 @@ class DatasetValidator:
                 index = future_to_index[future]
                 try:
                     status = future.result()
-                    # Find the original position in the list to place the status
                     df_index_pos = df_downloaded.index.get_loc(index)
                     statuses[df_index_pos] = status
                 except Exception as e:
@@ -144,5 +141,6 @@ class DatasetValidator:
 
         df_downloaded["validation_status"] = statuses
 
-        df_downloaded.to_csv(self.validated_csv_path, index=False)
-        print(f"Validation complete. Report saved to {self.validated_csv_path}")
+        df.loc[df_downloaded.index, "validation_status"] = statuses
+        df.to_csv(self.master_log_path, index=False)
+        print(f"Validation complete. Report saved to {self.master_log_path}")
