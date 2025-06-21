@@ -42,22 +42,46 @@ class MasterScraper:
 
         self.master_data_list = []
 
-    async def download_image(self, session, url, path, filename):
-        filepath = os.path.join(path, filename)
-        try:
-            async with session.get(url, timeout=15) as response:
-                if response.status == 200:
-                    content = await response.read()
-                    with open(filepath, "wb") as f:
-                        f.write(content)
-                    return {"filepath": filepath, "status": "success", "reason": None}
-                return {
-                    "filepath": url,
-                    "status": "failed",
-                    "reason": f"HTTP {response.status}",
-                }
-        except Exception as e:
-            return {"filepath": url, "status": "failed", "reason": str(e)}
+    async def download_image(self, session, semaphore, url, path, filename):
+        """
+        Downloads an image robustly, respecting a semaphore to limit concurrency.
+        """
+        async with semaphore:
+            filepath = os.path.join(path, filename)
+
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Referer": "https://www.google.com/",
+                "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            }
+
+            try:
+                async with session.get(url, timeout=60, headers=headers) as response:
+                    if response.status == 200:
+                        content_type = response.headers.get("Content-Type", "")
+                        if "image" not in content_type:
+                            return {
+                                "filepath": url,
+                                "status": "failed",
+                                "reason": f"Not an image (Content-Type: {content_type})",
+                            }
+
+                        content = await response.read()
+                        with open(filepath, "wb") as f:
+                            f.write(content)
+                        return {
+                            "filepath": filepath,
+                            "status": "success",
+                            "reason": None,
+                        }
+
+                    return {
+                        "filepath": url,
+                        "status": "failed",
+                        "reason": f"HTTP {response.status}",
+                    }
+            except Exception as e:
+                return {"filepath": url, "status": "failed", "reason": str(e)}
 
     async def run(self):
         seen_image_urls = set()
@@ -122,9 +146,7 @@ class MasterScraper:
                         seen_image_urls.add(url)
                         scrape_stats[source]["unique_found"] += 1
                         task_info = tasks[i]
-                        class_path = os.path.join(
-                            self.images_dir, task_info["class"]
-                        )
+                        class_path = os.path.join(self.images_dir, task_info["class"])
                         os.makedirs(class_path, exist_ok=True)
                         filename = f"{task_info['class']}_{hash(url)}.jpg"
                         self.master_data_list.append(
@@ -143,9 +165,11 @@ class MasterScraper:
             summary_df.index.name = "Source"
             summary_df.to_csv(self.summary_csv_path)
 
+            download_semaphore = asyncio.Semaphore(20)
             download_tasks = [
                 self.download_image(
                     session,
+                    download_semaphore,
                     item["image_url"],
                     os.path.dirname(item["image_path"]),
                     os.path.basename(item["image_path"]),
