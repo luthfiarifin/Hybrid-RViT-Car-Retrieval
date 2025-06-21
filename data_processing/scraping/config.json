@@ -1,0 +1,110 @@
+{
+    "car_classes": {
+        "sedan": [
+            "BMW 3 Series",
+            "BMW 5 Series",
+            "BMW 7 Series",
+            "BYD Seal",
+            "Honda Accord",
+            "Honda Civic",
+            "Honda City",
+            "Mercedes-Benz A Class",
+            "Mercedes-Benz C Class",
+            "Mercedes-Benz E Class",
+            "Mercedes-Benz S Class",
+            "Toyota Camry",
+            "Toyota Vios",
+            "Toyota Corolla",
+            "Toyota Corolla Altis"
+        ],
+        "hatchback": [
+            "Daihatsu Ayla",
+            "Daihatsu Sirion",
+            "Honda Jazz",
+            "Honda Brio",
+            "Mazda 2",
+            "Mazda 3",
+            "Suzuki Baleno",
+            "Suzuki Karimun",
+            "Suzuki Karimun Wagon R",
+            "Suzuki S-Presso",
+            "Suzuki Swift",
+            "Toyota Agya",
+            "Toyota Yaris"
+        ],
+        "pickup": [
+            "Jeep Gladiator",
+            "Mitsubishi Colt L300",
+            "Mitsubishi Strada Triton",
+            "Mitsubishi Triton",
+            "Suzuki Carry",
+            "Toyota Hilux",
+            "Toyota Hilux Rangga"
+        ],
+        "mpv": [
+            "Daihatsu Sigra",
+            "Daihatsu Xenia",
+            "Honda BR-V",
+            "Honda Mobilio",
+            "Honda Odyssey",
+            "Hyundai Stargazer",
+            "Mitsubishi Xpander",
+            "Mitsubishi Xpander Cross",
+            "Nissan March",
+            "Suzuki Ertiga",
+            "Toyota Avanza",
+            "Toyota Calya",
+            "Toyota Kijang Innova",
+            "Toyota Sienta",
+            "Wuling Confero",
+            "Wuling Cortez"
+        ],
+        "suv": [
+            "Daihatsu Rocky",
+            "Daihatsu Terios",
+            "Honda CR-V",
+            "Honda HR-V",
+            "Hyundai Creta",
+            "Hyundai IONIQ 5",
+            "Hyundai Palisade",
+            "Hyundai Santa Fe",
+            "Mazda CX-3",
+            "Mazda CX-5",
+            "Mazda CX-8",
+            "Mazda CX-9",
+            "Mitsubishi Outlander Sport",
+            "Mitsubishi Pajero Sport",
+            "Nissan Juke",
+            "Suzuki Vitara",
+            "Suzuki XL7",
+            "Toyota Fortuner",
+            "Toyota Rush"
+        ],
+        "offroad": [
+            "Daihatsu Taft",
+            "Ford Ranger",
+            "Jeep Wrangler",
+            "Suzuki Jimny",
+            "Toyota Land Cruiser",
+            "Toyota Land Cruiser Prado"
+        ],
+        "van": [
+            "Daihatsu Gran Max",
+            "Daihatsu Luxio",
+            "Isuzu Elf",
+            "Mercedes-Benz V-Class",
+            "Suzuki APV",
+            "Toyota Hiace"
+        ],
+        "truck": [
+            "Hino Dutro",
+            "Isuzu ELF",
+            "Mitsubishi Colt Diesel",
+            "Mitsubishi Fuso Canter",
+            "Toyota Dyna"
+        ]
+    },
+    "concurrent_requests": 3,
+    "images_per_term": 150,
+    "max_pages_per_term": 10
+}
