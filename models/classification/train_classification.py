@@ -78,36 +78,41 @@ class EarlyStopping:
 
 class CarAugmentation:
     """
-    CarAugmentation: Albumentations-based aggressive augmentation pipeline for car images.
-    Includes perspective, rotation, blur, coarse dropout, and color jitter.
+    An augmentation pipeline specifically tuned for
+    high-angle, real-world CCTV footage with various weather and occlusions.
     """
 
     def __init__(self):
         self.aug = A.Compose(
             [
+                # Start with a crop to focus on the car, but keep it mild
                 A.RandomResizedCrop(
-                    (224, 224), scale=(0.8, 1.0), ratio=(0.75, 1.33), p=1.0
+                    height=224, width=224, scale=(0.85, 1.0), ratio=(0.75, 1.33), p=0.9
                 ),
                 A.HorizontalFlip(p=0.5),
-                A.Perspective(scale=(0.05, 0.1), p=0.5),
-                A.Rotate(limit=15, p=0.7),
-                A.ColorJitter(
-                    brightness=0.2, contrast=0.2, saturation=0.2, hue=0.0, p=0.8
+                # --- 1. Simulate Camera Angle & Distortion ---
+                # Affine is great for simulating shear, rotation, and scale from a CCTV angle
+                A.Affine(scale=(0.9, 1.1), rotate=(-10, 10), shear=(-10, 10), p=0.7),
+                # --- 2. Simulate Weather & Lighting ---
+                A.RandomBrightnessContrast(
+                    brightness_limit=0.2, contrast_limit=0.2, p=0.75
                 ),
-                A.GaussianBlur(blur_limit=(5, 9), sigma_limit=(0.1, 5.0), p=0.5),
-                A.CoarseDropout(
-                    max_holes=8,
-                    max_height=22,
-                    max_width=22,
-                    min_holes=1,
-                    min_height=10,
-                    min_width=10,
-                    fill_value=0,
-                    p=0.2,
-                ),
+                A.RandomRain(p=0.2),  # Directly adds a rain effect
+                A.RandomShadow(p=0.3),  # Simulates shadows on the car
+                A.ColorJitter(p=0.5),
+                # --- 3. Simulate Occlusion & Image Quality ---
+                # CoarseDropout is excellent for simulating parts of the car being blocked
+                A.CoarseDropout(max_holes=8, max_height=25, max_width=25, p=0.5),
+                # MotionBlur is more realistic for moving cars than GaussianBlur
+                A.MotionBlur(blur_limit=7, p=0.5),
+                # ImageCompression simulates the artifacts from a real CCTV feed
+                A.ImageCompression(quality_lower=75, quality_upper=95, p=0.5),
+                # --- 4. Final Conversion ---
                 A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
                 ToTensorV2(),
-            ]
+            ],
+            # Increase probability of some transforms to ensure variety
+            p=0.95,
         )
 
     def __call__(self, img):
