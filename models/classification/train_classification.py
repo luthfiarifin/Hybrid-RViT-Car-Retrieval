@@ -82,10 +82,10 @@ class CarAugmentation:
         self.aug = A.Compose(
             [
                 A.RandomResizedCrop(
-                    224, 224, scale=(0.8, 1.0), ratio=(0.75, 1.33), p=1.0
+                    (224, 224), scale=(0.8, 1.0), ratio=(0.75, 1.33), p=1.0
                 ),
                 A.HorizontalFlip(p=0.5),
-                A.RandomPerspective(distortion_scale=0.3, p=0.5),
+                A.Perspective(scale=(0.05, 0.1), p=0.5),
                 A.Rotate(limit=15, p=0.7),
                 A.ColorJitter(
                     brightness=0.2, contrast=0.2, saturation=0.2, hue=0.0, p=0.8
