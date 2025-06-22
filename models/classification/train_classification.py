@@ -89,34 +89,35 @@ class CarAugmentation:
     def __init__(self):
         self.aug = A.Compose(
             [
-                # Start with a crop to focus on the car, but keep it mild
-                A.RandomResizedCrop(
-                    height=224, width=224, scale=(0.85, 1.0), ratio=(0.75, 1.33), p=0.9
-                ),
+                # --- 1. MANDATORY: Resize Every Image First ---
+                # This ensures all images entering the pipeline are the correct size.
+                A.Resize(height=224, width=224),
+                # --- 2. OPTIONAL: Apply Random Augmentations ---
                 A.HorizontalFlip(p=0.5),
-                # --- 1. Simulate Camera Angle & Distortion ---
-                # Affine is great for simulating shear, rotation, and scale from a CCTV angle
                 A.Affine(scale=(0.9, 1.1), rotate=(-10, 10), shear=(-10, 10), p=0.7),
-                # --- 2. Simulate Weather & Lighting ---
                 A.RandomBrightnessContrast(
                     brightness_limit=0.2, contrast_limit=0.2, p=0.75
                 ),
-                A.RandomRain(p=0.2),  # Directly adds a rain effect
-                A.RandomShadow(p=0.3),  # Simulates shadows on the car
+                A.RandomRain(p=0.2),
+                A.RandomShadow(p=0.3),
                 A.ColorJitter(p=0.5),
-                # --- 3. Simulate Occlusion & Image Quality ---
-                # CoarseDropout is excellent for simulating parts of the car being blocked
-                A.CoarseDropout(max_holes=8, max_height=25, max_width=25, p=0.5),
-                # MotionBlur is more realistic for moving cars than GaussianBlur
+                A.CoarseDropout(
+                    num_holes_range=(1, 8),
+                    hole_height_range=(8, 25),
+                    hole_width_range=(8, 25),
+                    p=0.5,
+                ),
                 A.MotionBlur(blur_limit=7, p=0.5),
-                # ImageCompression simulates the artifacts from a real CCTV feed
-                A.ImageCompression(quality_lower=75, quality_upper=95, p=0.5),
-                # --- 4. Final Conversion ---
+                A.ImageCompression(
+                    compression_type="jpeg",
+                    quality_range=(75, 95),
+                    p=0.5,
+                ),
+                # --- 3. MANDATORY: Final Conversion ---
+                # These must always be applied at the end.
                 A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
                 ToTensorV2(),
-            ],
-            # Increase probability of some transforms to ensure variety
-            p=0.95,
+            ]
         )
 
     def __call__(self, img):
@@ -184,8 +185,8 @@ class CarClassifierTrainer:
 
         # TensorBoard writer setup
         run_name = f"run_{int(time.time())}"
-        self.writer = SummaryWriter(f"logs/{run_name}")
-        print(f"Logging to TensorBoard: logs/{run_name}")
+        self.writer = SummaryWriter(f"logs/train_classification/{run_name}")
+        print(f"Logging to TensorBoard: logs/train_classification/{run_name}")
 
         self._prepare_data()
         self._init_model()
