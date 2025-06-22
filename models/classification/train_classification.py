@@ -64,10 +64,14 @@ class EarlyStopping:
 
     def save_checkpoint(self, val_loss, model):
         """Saves model when validation loss decrease."""
+        import os
+
         if self.verbose:
             self.trace_func(
                 f"Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ..."
             )
+        # Ensure parent directory exists
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
 
