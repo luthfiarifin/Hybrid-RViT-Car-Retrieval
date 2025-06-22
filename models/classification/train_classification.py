@@ -1,17 +1,21 @@
+import time
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-from tqdm import tqdm
-import time
-import numpy as np
 
-from models.classification.hybrid_resnet_vit import HybridRestnetVit
+from tqdm import tqdm
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
+
+from models.classification.hybrid_resnet_vit import HybridRestnetVit
 
 
 class EarlyStopping:
@@ -177,6 +181,11 @@ class CarClassifierTrainer:
         self.early_stopping_triggered = False
         self.stopped_epoch = None
         self.early_stopping_counter_history = []
+
+        # TensorBoard writer setup
+        run_name = f"run_{int(time.time())}"
+        self.writer = SummaryWriter(f"logs/{run_name}")
+        print(f"Logging to TensorBoard: logs/{run_name}")
 
         self._prepare_data()
         self._init_model()
@@ -393,6 +402,12 @@ class CarClassifierTrainer:
 
             print(f"Time: {epoch_time:.2f}s | LR: {current_lr:.2e}")
 
+            # TensorBoard logging
+            self.writer.add_scalar("Loss/train", train_loss, epoch)
+            self.writer.add_scalar("Loss/validation", val_loss, epoch)
+            self.writer.add_scalar("Accuracy/validation", val_accuracy, epoch)
+            self.writer.add_scalar("LearningRate", current_lr, epoch)
+
             # Save best model based on accuracy
             if val_accuracy > best_accuracy:
                 best_accuracy = val_accuracy
@@ -429,6 +444,7 @@ class CarClassifierTrainer:
             torch.save(best_model_state, best_acc_path)
             print(f"Best accuracy model saved to {best_acc_path}")
 
+        self.writer.close()
         return {
             "train_losses": self.train_losses,
             "val_accuracies": self.val_accuracies,
