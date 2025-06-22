@@ -9,6 +9,50 @@ import time
 
 from models.classification.hybrid_resnet_vit import HybridRestnetVit
 
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
+
+class CarAugmentation:
+    """
+    CarAugmentation: Albumentations-based aggressive augmentation pipeline for car images.
+    Includes perspective, rotation, blur, coarse dropout, and color jitter.
+    """
+
+    def __init__(self):
+        self.aug = A.Compose(
+            [
+                A.RandomResizedCrop(
+                    224, 224, scale=(0.8, 1.0), ratio=(0.75, 1.33), p=1.0
+                ),
+                A.HorizontalFlip(p=0.5),
+                A.RandomPerspective(distortion_scale=0.3, p=0.5),
+                A.Rotate(limit=15, p=0.7),
+                A.ColorJitter(
+                    brightness=0.2, contrast=0.2, saturation=0.2, hue=0.0, p=0.8
+                ),
+                A.GaussianBlur(blur_limit=(5, 9), sigma_limit=(0.1, 5.0), p=0.5),
+                A.CoarseDropout(
+                    max_holes=8,
+                    max_height=22,
+                    max_width=22,
+                    min_holes=1,
+                    min_height=10,
+                    min_width=10,
+                    fill_value=0,
+                    p=0.2,
+                ),
+                A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+                ToTensorV2(),
+            ]
+        )
+
+    def __call__(self, img):
+        import numpy as np
+
+        img = np.array(img)
+        return self.aug(image=img)["image"]
+
 
 class CarClassifierTrainer:
     """
@@ -31,7 +75,7 @@ class CarClassifierTrainer:
         result_path="carvit_model.pth",
         use_weighted_loss=True,
         use_class_balancing=False,
-        num_workers=0
+        num_workers=0,
     ):
         self.DEVICE = device or ("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.DEVICE}")
@@ -62,18 +106,7 @@ class CarClassifierTrainer:
 
     def _prepare_data(self):
         # Data transformations
-        self.train_transforms = transforms.Compose(
-            [
-                transforms.Resize((224, 224)),
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomRotation(10),
-                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
+        self.train_transforms = CarAugmentation()
         self.val_transforms = transforms.Compose(
             [
                 transforms.Resize((224, 224)),
