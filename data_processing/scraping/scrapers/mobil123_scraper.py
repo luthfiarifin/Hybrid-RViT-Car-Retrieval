@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import aiohttp
 from bs4 import BeautifulSoup
 import random
@@ -33,34 +34,50 @@ class Mobil123Scraper:
         for page_num in range(1, self.max_pages + 1):
             async with self.semaphore:  # Wait for a free slot before making a request
                 search_url = f"{base_url}?page_size=50&page={page_num}"
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-                }
+                try:
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                        "Accept-Encoding": "gzip, deflate, br",
+                        "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+                        "Cache-Control": "max-age=0",
+                        "Sec-Ch-Ua": '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+                        "Sec-Ch-Ua-Mobile": "?0",
+                        "Sec-Ch-Ua-Platform": '"macOS"',
+                        "Sec-Fetch-Dest": "empty",
+                        "Sec-Fetch-Mode": "navigate",
+                        "Sec-Fetch-Site": "same-origin",
+                    }
 
-                async with self.session.get(
-                    search_url, headers=headers, timeout=20
-                ) as response:
-                    if response.status != 200:
-                        break
-
-                    html = await response.text()
-                    soup = BeautifulSoup(html, "html.parser")
-                    car_listings = soup.find_all("article", class_="listing--card")
-
-                    if not car_listings:
-                        break
-
-                    for listing in car_listings:
-                        image_tag = listing.find("img", class_="listing__img")
-                        if image_tag and "data-src" in image_tag.attrs:
-                            urls.add(image_tag["data-src"])
-                        elif image_tag and "src" in image_tag.attrs:
-                            urls.add(image_tag["src"])
-                        if len(urls) >= self.images_per_term:
+                    async with self.session.get(
+                        search_url, headers=headers, timeout=20
+                    ) as response:
+                        if response.status != 200:
                             break
 
-                    if len(urls) >= self.images_per_term:
-                        break
+                        html = await response.text()
+                        soup = BeautifulSoup(html, "html.parser")
+                        car_listings = soup.find_all("article", class_="listing--card")
+
+                        if not car_listings:
+                            break
+
+                        for listing in car_listings:
+                            image_tag = listing.find("img", class_="listing__img")
+                            if image_tag and "data-src" in image_tag.attrs:
+                                urls.add(image_tag["data-src"])
+                            elif image_tag and "src" in image_tag.attrs:
+                                urls.add(image_tag["src"])
+                            if len(urls) >= self.images_per_term:
+                                break
+
+                        if len(urls) >= self.images_per_term:
+                            break
+                except Exception as e:
+                    logging.error(
+                        f"[Mobil123] Failed to scrape '{search_term}' on page {page_num}, url: {search_url}: {e}"
+                    )
+                    raise
 
             await asyncio.sleep(random.uniform(0.5, 1.5))
         return list(urls)

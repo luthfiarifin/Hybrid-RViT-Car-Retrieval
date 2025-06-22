@@ -20,7 +20,7 @@ class DatasetValidator:
 
     def __init__(
         self,
-        yolo_model_path="models/yolo/yolo12m.pt",
+        yolo_model_path="models/yolo/yolo12s.pt",
         min_resolution=(150, 150),
         max_workers=8,
         master_csv_path="master_scrape_log.csv",
