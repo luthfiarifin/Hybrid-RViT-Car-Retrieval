@@ -200,5 +200,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-data_before/
-stanford_cars/
+# Ignore all jpg images in the dataset
+data_processing/data/dataset/
+data_processing/data/images/
+data_processing/data/rejected_images/
