@@ -107,7 +107,6 @@
             "UD Trucks Quester"
         ]
     },
-    "concurrent_requests": 3,
-    "images_per_term": 150,
+    "images_per_term": 1000,
     "max_pages_per_term": 10
 }

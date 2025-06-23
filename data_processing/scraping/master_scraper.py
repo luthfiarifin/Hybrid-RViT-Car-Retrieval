@@ -11,7 +11,6 @@ from collections import defaultdict
 from .scrapers.olx_scraper import OlxScraper
 from .scrapers.mobil123_scraper import Mobil123Scraper
 from .scrapers.carmudi_scraper import CarmudiScraper
-from .scrapers.google_scraper import GoogleImageScraper
 
 
 class MasterScraper:
@@ -32,7 +31,7 @@ class MasterScraper:
 
         self.car_classes = config["car_classes"]
         self.images_per_term = config["images_per_term"]
-        self.max_pages_per_term = config.get("max_pages_per_term", 5)
+        self.max_pages_per_term = config.get("max_pages_per_term", 10)
 
         self.image_download_path = images_dir
         self.master_log_path = csv_path
@@ -86,7 +85,6 @@ class MasterScraper:
             browser = None
             try:
                 print("Launching browser for scraping...")
-                headless_browser = await p.chromium.launch(headless=True)
                 non_headless_browser = await p.chromium.launch(headless=False)
 
                 browser_semaphore = asyncio.Semaphore(2)
@@ -108,11 +106,7 @@ class MasterScraper:
                     non_headless_browser,
                     browser_semaphore,
                     self.images_per_term,
-                )
-                google_scraper = GoogleImageScraper(
-                    headless_browser,
-                    browser_semaphore,
-                    self.images_per_term,
+                    self.max_pages_per_term
                 )
 
                 tasks = []
@@ -122,14 +116,6 @@ class MasterScraper:
                             {
                                 "source": "OLX",
                                 "task": olx_scraper.scrape(term),
-                                "class": class_name,
-                                "term": term,
-                            }
-                        )
-                        tasks.append(
-                            {
-                                "source": "Google",
-                                "task": google_scraper.scrape(term),
                                 "class": class_name,
                                 "term": term,
                             }
