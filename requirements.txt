@@ -1,0 +1,12 @@
+playwright
+bs4
+
+einops
+torch
+torchvision
+numpy
+ultralytics
+scikit-learn
+albumentations
+
+tqdm

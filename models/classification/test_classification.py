@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 import random
 
-from models.classification.hybrid_resnet_vit import HybridRestnetVit
+from models.classification.hybrid_efficient_net_vit_model import HybridEfficientNetViT
 
 
 class CarClassificationTester:
@@ -22,10 +22,8 @@ class CarClassificationTester:
         num_classes=8,
         grid_rows=8,
         grid_cols=10,
-        img_size=224,
         embed_dim=768,
         num_heads=12,
-        num_layers=6,
         dropout=0.1,
     ):
         self.test_dir = test_dir
@@ -34,10 +32,8 @@ class CarClassificationTester:
         self.num_classes = num_classes
         self.grid_rows = grid_rows
         self.grid_cols = grid_cols
-        self.img_size = img_size
         self.embed_dim = embed_dim
         self.num_heads = num_heads
-        self.num_layers = num_layers
         self.dropout = dropout
         self.model = self._load_model()
         self.transform = transforms.Compose(
@@ -57,12 +53,10 @@ class CarClassificationTester:
             model_files.sort()
             self.model_path = os.path.join(results_dir, model_files[-1])
 
-        model = HybridRestnetVit(
-            image_size=self.img_size,
+        model = HybridEfficientNetViT(
             num_classes=self.num_classes,
             embed_dim=self.embed_dim,
             num_heads=self.num_heads,
-            num_layers=self.num_layers,
             dropout=self.dropout,
         )
         model.load_state_dict(torch.load(self.model_path, map_location="cpu"))

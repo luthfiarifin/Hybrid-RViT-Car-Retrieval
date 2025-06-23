@@ -1,21 +1,22 @@
 import time
-import numpy as np
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from torchvision.datasets import ImageFolder
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 
 from tqdm import tqdm
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from models.classification.hybrid_resnet_vit import HybridRestnetVit
+from models.classification.hybrid_efficient_net_vit_model import HybridEfficientNetViT
 
 
 class EarlyStopping:
@@ -137,7 +138,6 @@ class CarClassifierTrainer:
         num_classes=8,
         embed_dim=768,
         num_heads=12,
-        num_layers=6,
         dropout=0.1,
         learning_rate=1e-4,
         batch_size=32,
@@ -156,7 +156,6 @@ class CarClassifierTrainer:
         self.NUM_CLASSES = num_classes
         self.EMBED_DIM = embed_dim
         self.NUM_HEADS = num_heads
-        self.NUM_LAYERS = num_layers
         self.DROPOUT = dropout
         self.LEARNING_RATE = learning_rate
         self.BATCH_SIZE = batch_size
@@ -175,6 +174,7 @@ class CarClassifierTrainer:
 
         # Initialize tracking variables
         self.train_losses = []
+        self.train_accuracies = []
         self.val_accuracies = []
         self.val_losses = []
         self.epoch_times = []
@@ -244,15 +244,13 @@ class CarClassifierTrainer:
         )
 
     def _init_model(self):
-        self.model = HybridRestnetVit(
+        self.model = HybridEfficientNetViT(
             num_classes=self.NUM_CLASSES,
             embed_dim=self.EMBED_DIM,
             num_heads=self.NUM_HEADS,
-            num_layers=self.NUM_LAYERS,
             dropout=self.DROPOUT,
         ).to(self.DEVICE)
 
-        # Initialize loss function with optional class weighting
         if self.USE_WEIGHTED_LOSS:
             # Calculate class weights based on inverse frequency
             class_counts = torch.zeros(self.NUM_CLASSES)
@@ -315,7 +313,10 @@ class CarClassifierTrainer:
         self.model.train()
         loop = tqdm(self.train_loader, leave=True)
         running_loss = 0.0
-        for batch_idx, (data, targets) in enumerate(loop):
+        num_correct = 0
+        num_samples = 0
+
+        for _, (data, targets) in enumerate(loop):
             data, targets = data.to(self.DEVICE), targets.to(self.DEVICE)
             scores = self.model(data)
             loss = self.loss_fn(scores, targets)
@@ -323,8 +324,14 @@ class CarClassifierTrainer:
             loss.backward()
             self.optimizer.step()
             running_loss += loss.item()
+            _, predictions = scores.max(1)
+            num_correct += (predictions == targets).sum().item()
+            num_samples += predictions.size(0)
             loop.set_postfix(loss=loss.item())
-        return running_loss / len(self.train_loader)
+
+        avg_loss = running_loss / len(self.train_loader)
+        accuracy = (num_correct / num_samples) * 100 if num_samples > 0 else 0.0
+        return avg_loss, accuracy
 
     def check_accuracy(self):
         self.model.eval()
@@ -385,7 +392,7 @@ class CarClassifierTrainer:
             print(f"{'='*50}")
 
             # Training phase
-            train_loss = self.train_one_epoch()
+            train_loss, train_accuracy = self.train_one_epoch()
 
             # Validation phase
             val_accuracy, val_loss, predictions, targets = self.check_accuracy()
@@ -395,16 +402,20 @@ class CarClassifierTrainer:
             current_lr = self.optimizer.param_groups[0]["lr"]
 
             self.train_losses.append(train_loss)
+            self.train_accuracies.append(train_accuracy)
             self.val_accuracies.append(val_accuracy.item())
             self.val_losses.append(val_loss)
             self.epoch_times.append(epoch_time)
             self.learning_rates.append(current_lr)
             self.early_stopping_counter_history.append(early_stopping.counter)
 
+            print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_accuracy:.2f}%")
+            print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_accuracy:.2f}%")
             print(f"Time: {epoch_time:.2f}s | LR: {current_lr:.2e}")
 
             # TensorBoard logging
             self.writer.add_scalar("Loss/train", train_loss, epoch)
+            self.writer.add_scalar("Accuracy/train", train_accuracy, epoch)
             self.writer.add_scalar("Loss/validation", val_loss, epoch)
             self.writer.add_scalar("Accuracy/validation", val_accuracy, epoch)
             self.writer.add_scalar("LearningRate", current_lr, epoch)
@@ -448,6 +459,7 @@ class CarClassifierTrainer:
         self.writer.close()
         return {
             "train_losses": self.train_losses,
+            "train_accuracies": self.train_accuracies,
             "val_accuracies": self.val_accuracies,
             "val_losses": self.val_losses,
             "epoch_times": self.epoch_times,
