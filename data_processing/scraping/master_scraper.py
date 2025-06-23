@@ -47,8 +47,8 @@ class MasterScraper:
             try:
                 browser = await p.chromium.launch(headless=False)
 
-                browser_semaphore = asyncio.Semaphore(4)
-                http_semaphore = asyncio.Semaphore(10)
+                browser_semaphore = asyncio.Semaphore(2)
+                http_semaphore = asyncio.Semaphore(5)
 
                 mobil123_scraper = Mobil123Scraper(
                     session,
@@ -66,7 +66,7 @@ class MasterScraper:
                     browser,
                     browser_semaphore,
                     self.images_per_term,
-                    self.max_pages_per_term
+                    self.max_pages_per_term,
                 )
 
                 tasks = []
