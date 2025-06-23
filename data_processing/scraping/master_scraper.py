@@ -139,16 +139,11 @@ class MasterScraper:
                 .reset_index()
                 .rename(columns={"index": "Source"})
             )
-            summary_df.to_csv(
-                os.path.join(self.reports_path, "scrape_summary_report.csv"),
-                index=False,
-            )
+            summary_df.to_csv(self.summary_report_path, index=False)
 
             # Save the list of images to be downloaded
             master_df = pd.DataFrame(self.master_data_list)
-            master_df.to_csv(
-                os.path.join(self.reports_path, self.csv_name), index=False
-            )
+            master_df.to_csv(self.master_log_path, index=False)
 
             print(
                 f"Scraping finished. Found {len(self.master_data_list)} unique images to download."
