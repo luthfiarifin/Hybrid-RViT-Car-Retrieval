@@ -10,9 +10,7 @@
             "Daihatsu Sigra",
             "Honda Mobilio",
             "Wuling Confero",
-            "Hyundai Stargazer",
-            "Toyota Alphard",
-            "Toyota Voxy"
+            "Hyundai Stargazer"
         ],
         "crossover": [
             "Honda HR-V",
@@ -34,19 +32,21 @@
             "Suzuki Jimny",
             "Toyota Land Cruiser",
             "Isuzu MU-X",
-            "Nissan Terra"
+            "Nissan Terra",
+            "Ford Everest",
+            "Chevrolet Trailblazer"
         ],
         "hatchback": [
             "Honda Brio",
             "Toyota Agya",
             "Daihatsu Ayla",
             "Toyota Yaris",
-            "Honda Jazz",
             "Honda City Hatchback",
             "Suzuki Baleno",
             "Mazda 2",
             "Wuling Air EV",
-            "Suzuki Ignis"
+            "Suzuki Ignis",
+            "Daihatsu Sirion"
         ],
         "sedan": [
             "Honda Civic",
@@ -57,17 +57,20 @@
             "Mercedes-Benz C Class",
             "BMW 3 Series",
             "Honda City",
-            "BYD Seal"
+            "Hyundai Ioniq 6",
+            "Mazda 3 Sedan"
         ],
         "pickup": [
             "Suzuki Carry Pick Up",
             "Daihatsu Gran Max Pick Up",
             "Mitsubishi Colt L300",
-            "Toyota Hilux",
-            "Mitsubishi Triton",
-            "Isuzu D-Max",
             "Isuzu Traga",
-            "Wuling Formo Max"
+            "Wuling Formo Max",
+            "DFSK Super Cab",
+            "Tata Super Ace",
+            "Tata Xenon",
+            "Esemka Bima",
+            "Kia Bongo"
         ],
         "van": [
             "Toyota Hiace",
@@ -77,15 +80,21 @@
             "Hyundai Staria",
             "Mercedes-Benz V-Class",
             "DFSK Gelora",
-            "Nissan Evalia"
+            "Nissan Evalia",
+            "Nissan Serena",
+            "Mazda Biante"
         ],
         "truck": [
             "Mitsubishi Fuso Canter",
             "Isuzu ELF",
             "Hino Dutro",
             "Toyota Dyna",
+            "Mitsubishi Colt Diesel",
             "Hino Ranger",
-            "UD Trucks Quester"
+            "UD Trucks Quester",
+            "Volvo FH",
+            "Scania P-series",
+            "Mercedes-Benz Axor"
         ]
     },
     "images_per_term": 500,
