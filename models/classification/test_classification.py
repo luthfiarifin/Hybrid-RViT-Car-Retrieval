@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from torchvision import transforms
 from PIL import Image
 import numpy as np
+import random
 
 from models.classification.hybrid_resnet_vit import HybridRestnetVit
 
@@ -49,7 +50,7 @@ class CarClassificationTester:
 
     def _load_model(self):
         if self.model_path is None:
-            results_dir = "models/results"
+            results_dir = "models/classification/results"
             model_files = [f for f in os.listdir(results_dir) if f.endswith(".pth")]
             if not model_files:
                 raise FileNotFoundError("No model checkpoint found in models/results.")
@@ -71,8 +72,10 @@ class CarClassificationTester:
     def get_test_images(self, max_images=None):
         if max_images is None:
             max_images = self.grid_rows * self.grid_cols
+
         image_paths = []
         labels = []
+
         for class_name in sorted(os.listdir(self.test_dir)):
             class_folder = os.path.join(self.test_dir, class_name)
             if not os.path.isdir(class_folder):
@@ -81,17 +84,23 @@ class CarClassificationTester:
                 if img_name.lower().endswith((".jpg", ".jpeg", ".png")):
                     image_paths.append(os.path.join(class_folder, img_name))
                     labels.append(class_name)
-                if len(image_paths) >= max_images:
-                    return image_paths, labels
+
+        combined = list(zip(image_paths, labels))
+        random.shuffle(combined)
+        image_paths, labels = zip(*combined) if combined else ([], [])
+        image_paths = list(image_paths)[:max_images]
+        labels = list(labels)[:max_images]
         return image_paths, labels
 
     def predict(self, image_path):
         img = Image.open(image_path).convert("RGB")
         input_tensor = self.transform(img).unsqueeze(0)
+
         with torch.no_grad():
             output = self.model(input_tensor)
             pred_idx = output.argmax(dim=1).item()
             pred_label = self.class_names[pred_idx]
+
         return img, pred_label
 
     def plot_predictions(self):
@@ -101,16 +110,25 @@ class CarClassificationTester:
             self.grid_cols,
             figsize=(2 * self.grid_cols, 2 * self.grid_rows),
         )
+
+        correct = 0
+        total = len(image_paths)
+
         for idx, (img_path, true_label) in enumerate(zip(image_paths, true_labels)):
             img, pred_label = self.predict(img_path)
+            if pred_label == true_label:
+                correct += 1
             row, col = divmod(idx, self.grid_cols)
             ax = axes[row, col]
             ax.imshow(np.array(img))
             ax.set_title(f"T: {true_label}\nP: {pred_label}", fontsize=8)
             ax.axis("off")
-        # Hide unused axes
+
         for idx in range(len(image_paths), self.grid_rows * self.grid_cols):
             row, col = divmod(idx, self.grid_cols)
             axes[row, col].axis("off")
         plt.tight_layout()
         plt.show()
+
+        accuracy = correct / total if total > 0 else 0
+        print(f"Test Accuracy: {accuracy:.2%} ({correct}/{total})")
