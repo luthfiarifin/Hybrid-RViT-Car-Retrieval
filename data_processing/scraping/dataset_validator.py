@@ -20,7 +20,7 @@ class DatasetValidator:
 
     def __init__(
         self,
-        yolo_model_path="models/yolo/yolo12s.pt",
+        yolo_model_path="models/yolo/yolo12n.pt",
         min_resolution=(150, 150),
         max_workers=8,
         master_csv_path="master_scrape_log.csv",
@@ -75,7 +75,7 @@ class DatasetValidator:
 
                 with Image.open(image_path) as img:
                     cropped_image = img.crop(largest_box).convert("RGB")
-                    cropped_image.save(image_path, "JPEG", quality=95)
+                    cropped_image.save(image_path, "JPEG", quality=80, optimize=True)
 
                 status = "valid_and_cropped"
             else:
