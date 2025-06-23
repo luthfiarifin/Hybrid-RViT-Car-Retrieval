@@ -82,7 +82,7 @@ class ImageDownloader:
         async with async_playwright() as p, aiohttp.ClientSession() as session:
             browser = await p.chromium.launch(headless=False)
 
-            browser_dl_semaphore = asyncio.Semaphore(8)
+            browser_dl_semaphore = asyncio.Semaphore(10)
             http_dl_semaphore = asyncio.Semaphore(20)
 
             olx_tasks = [

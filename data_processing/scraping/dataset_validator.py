@@ -105,6 +105,8 @@ class DatasetValidator:
 
         # Only process images where download_status == 'success' and (validation_status is null or valid_and_cropped)
         df = pd.read_csv(self.master_log_path)
+        if "validation_status" not in df.columns:
+            df["validation_status"] = pd.NA
         df_downloaded = df[
             (df["download_status"] == "success")
             & (
