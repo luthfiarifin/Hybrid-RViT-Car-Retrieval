@@ -9,54 +9,44 @@
             "Toyota Calya",
             "Daihatsu Sigra",
             "Honda Mobilio",
-            "Honda BR-V",
-            "Mitsubishi Xpander Cross",
-            "Toyota Veloz",
+            "Wuling Confero",
             "Hyundai Stargazer",
             "Toyota Alphard",
             "Toyota Voxy"
         ],
-        "suv": [
-            "Toyota Fortuner",
-            "Mitsubishi Pajero Sport",
-            "Honda CR-V",
-            "Toyota Rush",
-            "Daihatsu Terios",
+        "crossover": [
             "Honda HR-V",
+            "Honda CR-V",
             "Toyota Raize",
             "Daihatsu Rocky",
             "Suzuki XL7",
             "Hyundai Creta",
             "Wuling Almaz",
             "Mazda CX-5",
-            "Toyota Land Cruiser",
-            "Suzuki Jimny"
+            "Kia Seltos",
+            "Nissan Kicks"
         ],
-        "city_car": [
+        "offroad": [
+            "Toyota Fortuner",
+            "Mitsubishi Pajero Sport",
+            "Toyota Rush",
+            "Daihatsu Terios",
+            "Suzuki Jimny",
+            "Toyota Land Cruiser",
+            "Isuzu MU-X",
+            "Nissan Terra"
+        ],
+        "hatchback": [
             "Honda Brio",
             "Toyota Agya",
             "Daihatsu Ayla",
-            "Suzuki S-Presso",
-            "Suzuki Ignis",
-            "Daihatsu Sirion",
-            "Nissan March",
-            "Kia Picanto",
-            "Hyundai i10",
-            "Wuling Air EV",
-            "Datsun Go",
-            "Suzuki Karimun Wagon R"
-        ],
-        "hatchback": [
             "Toyota Yaris",
             "Honda Jazz",
             "Honda City Hatchback",
             "Suzuki Baleno",
             "Mazda 2",
-            "Honda Civic Hatchback",
-            "Toyota GR Yaris",
-            "Honda Civic Type R",
-            "Ford Fiesta",
-            "Mini Cooper"
+            "Wuling Air EV",
+            "Suzuki Ignis"
         ],
         "sedan": [
             "Honda Civic",
@@ -66,10 +56,7 @@
             "Toyota Corolla Altis",
             "Mercedes-Benz C Class",
             "BMW 3 Series",
-            "Mercedes-Benz E Class",
-            "BMW 5 Series",
             "Honda City",
-            "Mazda 6",
             "BYD Seal"
         ],
         "pickup": [
@@ -80,11 +67,7 @@
             "Mitsubishi Triton",
             "Isuzu D-Max",
             "Isuzu Traga",
-            "Nissan Navara",
-            "Ford Ranger",
-            "Ford Ranger Raptor",
-            "Wuling Formo Max",
-            "Mazda BT-50"
+            "Wuling Formo Max"
         ],
         "van": [
             "Toyota Hiace",
@@ -93,16 +76,14 @@
             "Suzuki APV",
             "Hyundai Staria",
             "Mercedes-Benz V-Class",
-            "Nissan Evalia",
             "DFSK Gelora",
-            "Volkswagen Caravelle"
+            "Nissan Evalia"
         ],
         "truck": [
             "Mitsubishi Fuso Canter",
             "Isuzu ELF",
             "Hino Dutro",
             "Toyota Dyna",
-            "Mitsubishi Colt Diesel",
             "Hino Ranger",
             "UD Trucks Quester"
         ]
