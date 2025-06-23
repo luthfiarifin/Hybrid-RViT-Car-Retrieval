@@ -38,57 +38,17 @@ class MasterScraper:
         self.summary_report_path = summary_csv_path
         self.master_data_list = []
 
-    async def download_image(self, session, semaphore, url, path, filename):
-        """Downloads a single image robustly, respecting a semaphore."""
-        async with semaphore:
-            filepath = os.path.join(path, filename)
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-                "Referer": "https://www.google.com/",
-            }
-            try:
-                async with session.get(url, timeout=20, headers=headers) as response:
-                    if response.status == 200:
-                        content_type = response.headers.get("Content-Type", "")
-                        if "image" in content_type:
-                            content = await response.read()
-                            with open(filepath, "wb") as f:
-                                f.write(content)
-                            return {
-                                "filepath": filepath,
-                                "status": "success",
-                                "reason": None,
-                            }
-                        return {
-                            "filepath": url,
-                            "status": "failed",
-                            "reason": f"Not an image (Content-Type: {content_type})",
-                        }
-                    return {
-                        "filepath": url,
-                        "status": "failed",
-                        "reason": f"HTTP {response.status}",
-                    }
-            except Exception as e:
-                if isinstance(e, asyncio.CancelledError):
-                    return {
-                        "filepath": url,
-                        "status": "cancelled",
-                        "reason": "Task cancelled",
-                    }
-                return {"filepath": url, "status": "failed", "reason": str(e)}
-
     async def run(self):
-        """Main method to execute the entire scraping and downloading pipeline."""
+        seen_image_urls = set()
+        scrape_stats = defaultdict(lambda: {"unique_found": 0, "duplicates_skipped": 0})
 
         async with async_playwright() as p, aiohttp.ClientSession() as session:
             browser = None
             try:
-                print("Launching browser for scraping...")
-                non_headless_browser = await p.chromium.launch(headless=False)
+                browser = await p.chromium.launch(headless=False)
 
-                browser_semaphore = asyncio.Semaphore(2)
-                http_semaphore = asyncio.Semaphore(5)
+                browser_semaphore = asyncio.Semaphore(4)
+                http_semaphore = asyncio.Semaphore(10)
 
                 mobil123_scraper = Mobil123Scraper(
                     session,
@@ -103,7 +63,7 @@ class MasterScraper:
                     self.max_pages_per_term,
                 )
                 olx_scraper = OlxScraper(
-                    non_headless_browser,
+                    browser,
                     browser_semaphore,
                     self.images_per_term,
                     self.max_pages_per_term
@@ -142,71 +102,54 @@ class MasterScraper:
                     *scrape_coroutines, desc="Scraping All Sources"
                 )
 
-                seen_image_urls = set()
-                scrape_stats = defaultdict(
-                    lambda: {"unique_found": 0, "duplicates_skipped": 0}
-                )
-                for i, url_list in enumerate(results):
-                    source = tasks[i]["source"]
-                    for url in url_list:
-                        if url not in seen_image_urls:
-                            seen_image_urls.add(url)
-                            scrape_stats[source]["unique_found"] += 1
-                            task_info = tasks[i]
-                            class_path = os.path.join(
-                                self.image_download_path, task_info["class"]
-                            )
-                            os.makedirs(class_path, exist_ok=True)
-                            filename = f"{task_info['class']}_{hash(url)}.jpg"
-                            self.master_data_list.append(
-                                {
-                                    "class": task_info["class"],
-                                    "search_term": task_info["term"],
-                                    "source": source,
-                                    "image_url": url,
-                                    "image_path": os.path.join(class_path, filename),
-                                }
-                            )
-                        else:
-                            scrape_stats[source]["duplicates_skipped"] += 1
-
-                download_semaphore = asyncio.Semaphore(25)
-                download_tasks = [
-                    self.download_image(
-                        session,
-                        download_semaphore,
-                        item["image_url"],
-                        os.path.dirname(item["image_path"]),
-                        os.path.basename(item["image_path"]),
-                    )
-                    for item in self.master_data_list
-                ]
-                download_results = await aio_tqdm.gather(
-                    *download_tasks, desc="Downloading Images"
-                )
-
-                summary_df = (
-                    pd.DataFrame.from_dict(scrape_stats, orient="index")
-                    .reset_index()
-                    .rename(columns={"index": "Source"})
-                )
-                summary_df.to_csv(self.summary_report_path, index=False)
-
-                master_df = pd.DataFrame(self.master_data_list)
-                master_df["download_status"] = [
-                    res.get("status") for res in download_results
-                ]
-                master_df["reason"] = [res.get("reason") for res in download_results]
-                master_df.to_csv(self.master_log_path, index=False)
-
-                print("Scraping finished successfully and reports were saved.")
-
             except asyncio.CancelledError:
                 logging.warning("Scraping process was cancelled by the user.")
-                print("\nProcess cancelled by user. Shutting down gracefully.")
-
             finally:
-                if browser:
+                if browser and browser.is_connected():
                     await browser.close()
 
-        print("Scraper resources have been closed.")
+            # Process and deduplicate results
+            for i, url_list in enumerate(results):
+                source = tasks[i]["source"]
+                for url in url_list:
+                    if url not in seen_image_urls:
+                        seen_image_urls.add(url)
+                        scrape_stats[source]["unique_found"] += 1
+                        task_info = tasks[i]
+                        class_path = os.path.join(
+                            self.image_download_path, task_info["class"]
+                        )
+                        os.makedirs(class_path, exist_ok=True)
+                        filename = f"{task_info['class']}_{hash(url)}.jpg"
+                        self.master_data_list.append(
+                            {
+                                "class": task_info["class"],
+                                "search_term": task_info["term"],
+                                "source": source,
+                                "image_url": url,
+                                "image_path": os.path.join(class_path, filename),
+                            }
+                        )
+                    else:
+                        scrape_stats[source]["duplicates_skipped"] += 1
+
+            # Save scraping performance summary
+            summary_df = (
+                pd.DataFrame.from_dict(scrape_stats, orient="index")
+                .reset_index()
+                .rename(columns={"index": "Source"})
+            )
+            summary_df.to_csv(
+                os.path.join(self.reports_path, "scrape_summary_report.csv"),
+                index=False,
+            )
+
+            # Save the list of images to be downloaded
+            master_df = pd.DataFrame(self.master_data_list)
+            master_df.to_csv(
+                os.path.join(self.reports_path, self.csv_name), index=False
+            )
+
+            print(
+                f"Scraping finished. Found {len(self.master_data_list)} unique images to download."
+            )
