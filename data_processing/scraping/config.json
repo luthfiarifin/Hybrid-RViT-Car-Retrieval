@@ -97,6 +97,6 @@
             "Mercedes-Benz Axor"
         ]
     },
-    "images_per_term": 500,
-    "max_pages_per_term": 5
+    "images_per_term": 300,
+    "max_pages_per_term": 3
 }
