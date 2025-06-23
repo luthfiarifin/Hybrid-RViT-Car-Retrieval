@@ -20,7 +20,7 @@ class DatasetValidator:
 
     def __init__(
         self,
-        yolo_model_path="models/yolo/yolo12n.pt",
+        yolo_model_path="models/yolo/yolo12m.pt",
         min_resolution=(150, 150),
         max_workers=8,
         master_csv_path="master_scrape_log.csv",
@@ -103,10 +103,17 @@ class DatasetValidator:
             )
             return
 
+        # Only process images where download_status == 'success' and (validation_status is null or valid_and_cropped)
         df = pd.read_csv(self.master_log_path)
-        df_downloaded = df[df["download_status"] == "success"].copy()
+        df_downloaded = df[
+            (df["download_status"] == "success")
+            & (
+                df["validation_status"].isnull()
+                | (df["validation_status"] == "valid_and_cropped")
+            )
+        ].copy()
 
-        print(f"Found {len(df_downloaded)} downloaded images to validate and crop.")
+        print(f"Found {len(df_downloaded)} images to validate and crop.")
 
         # Setup rejection folders
         for folder in ["low_resolution", "not_a_car", "processing_error"]:
